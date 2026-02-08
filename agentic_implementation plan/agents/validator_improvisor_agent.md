@@ -14,20 +14,20 @@ Quality gate ensuring only high-quality Telugu stories reach users. Evaluates ge
 
 ```mermaid
 flowchart TD
-    A[📥 Draft Story + Original Prompt] --> B{Quality Evaluation<br/>(LLM Judge)}
+    A[📥 Draft Story + Original Prompt] --> B{"Quality Evaluation<br/>(LLM Judge)"}
 
     B --> C{Score >= 6.0?}
 
     C -->|No| D[Generate Specific Feedback]
     D --> E{Max Retries?}
 
-    E -->|No| F[📤 Request Regeneration<br/>(Back to RAG Agent)]
+    E -->|No| F["📤 Request Regeneration<br/>(Back to RAG Agent)"]
     E -->|Yes| G[⚠️ Return Best Attempt w/ Warning]
 
     C -->|Yes| H{Score >= 8.0?}
 
-    H -->|Yes| I[✅ Excellent Quality<br/>(Skip Polish)]
-    H -->|No| J[✨ Grammar Polish<br/>(Fix spelling/flow)]
+    H -->|Yes| I["✅ Excellent Quality<br/>(Skip Polish)"]
+    H -->|No| J["✨ Grammar Polish<br/>(Fix spelling/flow)"]
 
     I --> K[📤 Final Approved Story]
     J --> K

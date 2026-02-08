@@ -30,7 +30,7 @@ flowchart TD
     G --> I[Construct Final Prompt]
     H --> I
 
-    I --> J[Integrate Facets<br/>(Keywords, Genre, Tone)]
+    I --> J["Integrate Facets<br/>(Keywords, Genre, Tone)"]
 
     J --> K{Quality Check}
 

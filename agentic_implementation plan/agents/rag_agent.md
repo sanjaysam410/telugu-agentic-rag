@@ -14,7 +14,7 @@ Retrieve relevant context from the vector database and generate new Telugu stori
 
 ```mermaid
 flowchart TD
-    A[📥 Optimized Telugu Prompt] --> B[Metadata Agent<br/>(Extract Keywords/Genre)]
+    A[📥 Optimized Telugu Prompt] --> B["Metadata Agent<br/>(Extract Keywords/Genre)"]
 
     B --> C{Step 1: Retrieval}
 
@@ -24,9 +24,9 @@ flowchart TD
 
     F --> G{Step 2: Generation}
 
-    G --> H[Construct Prompt with Context<br/>(Style/Structure Reference)]
+    G --> H["Construct Prompt with Context<br/>(Style/Structure Reference)"]
 
-    H --> I[LLM Generation<br/>(Streaming)]
+    H --> I["LLM Generation<br/>(Streaming)"]
 
     I --> J[Draft Story]
 

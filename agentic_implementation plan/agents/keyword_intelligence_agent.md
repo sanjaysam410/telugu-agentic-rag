@@ -25,7 +25,7 @@ flowchart TD
         G{Every Night @ 2AM} --> H[Full Recalculation]
         H --> I["Calculat TF-IDF Scores<br/>(TF * IDF)"]
         I --> J[Rank Keywords]
-        J --> K[Calculate Trends<br/>(30-day delta)]
+        J --> K["Calculate Trends<br/>(30-day delta)"]
         K --> L[Generate Trending Lists]
     end
 
