@@ -83,35 +83,41 @@ graph TB
 Shows how data transforms from raw text to a vector point.
 
 ```mermaid
-stateDiagram-v2
+classDiagram
     direction LR
 
-    state "Raw Input" as Raw
-    state "Validated Object" as Validated
-    state "Enriched Metadata" as Enriched
-    state "Vector Entry" as Vector
+    class RawInput {
+        +String text
+        +Object user_fields
+        +String status="Unverified"
+    }
 
-    Raw : { text, user_fields }
-    Raw : Status: Unverified
+    class ValidatedObject {
+         +String text
+         +Boolean valid=true
+         +Float telugu_ratio
+         +List checks_passed
+    }
 
-    Validated : { text, valid: true }
-    Validated : + telugu_ratio
-    Validated : + checks_passed
+    class EnrichedMetadata {
+         +String text
+         +List keywords
+         +String genre
+         +String theme
+         +String summary
+         +Int year
+         +Int month
+    }
 
-    Enriched : { text, metadata }
-    Enriched : + keywords, genre
-    Enriched : + theme, summary
-    Enriched : + year, month
+    class VectorEntry {
+         +UUID id
+         +Vector embedding (768d)
+         +Object payload
+    }
 
-    Vector : { id, vector, payload }
-    Vector : + embedding (768d)
-    Vector : + optimized payload
-
-    [*] --> Raw
-    Raw --> Validated : Story Validation Agent
-    Validated --> Enriched : Metadata Generation Agent
-    Enriched --> Vector : Ingestion Agent
-    Vector --> [*] : Persist to Qdrant
+    RawInput --> ValidatedObject : Story Validation Agent
+    ValidatedObject --> EnrichedMetadata : Metadata Generation Agent
+    EnrichedMetadata --> VectorEntry : Ingestion Agent
 ```
 
 ---
