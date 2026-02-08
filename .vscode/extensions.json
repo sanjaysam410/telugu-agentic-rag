@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "yzhang.markdown-all-in-one",
+        "eamodio.gitlens",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker"
+    ]
+}
