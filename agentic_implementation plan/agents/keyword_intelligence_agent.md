@@ -10,6 +10,36 @@ Track keyword frequency across the archive using **TF-IDF scoring** and maintain
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Validated Story Metadata] --> B[Update In-Memory Counts]
+    B --> C[Mark Keywords as Dirty]
+
+    subgraph Periodic Update Strategy
+        C --> D{Every 15 mins}
+        D -->|Incremental| E[Persist to JSON]
+        E --> F[Update Document Frequencies]
+
+        G{Every Night @ 2AM} --> H[Full Recalculation]
+        H --> I["Calculat TF-IDF Scores<br/>(TF * IDF)"]
+        I --> J[Rank Keywords]
+        J --> K[Calculate Trends<br/>(30-day delta)]
+        K --> L[Generate Trending Lists]
+    end
+
+    L --> M[📤 Enhanced Stats JSON]
+    M --> N[Sync Legacy Stats JSON]
+
+    style A fill:#e1f5fe
+    style M fill:#c8e6c9
+    style N fill:#fff9c4
+    style H fill:#ffcc80
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -70,25 +100,25 @@ import math
 def calculate_tfidf(keyword: str, stats: dict) -> float:
     """
     Calculate TF-IDF score for a keyword.
-    
+
     Returns: float between 0-1 (higher = more distinctive)
     """
     corpus = stats["corpus_stats"]
     kw = stats["keywords"][keyword]
-    
+
     # Term Frequency (normalized by corpus size)
     tf = kw["count"] / corpus["total_words"]
-    
+
     # Inverse Document Frequency
     # Add 1 to avoid division by zero
     idf = math.log(corpus["total_stories"] / max(kw["document_frequency"], 1))
-    
+
     # Raw TF-IDF
     raw_tfidf = tf * idf
-    
+
     # Normalize to 0-1 range (empirical max ~0.001)
     normalized = min(raw_tfidf / 0.001, 1.0)
-    
+
     return round(normalized, 4)
 ```
 
@@ -147,19 +177,19 @@ _pending_updates = defaultdict(lambda: {"count": 0, "doc_freq": 0})
 
 def on_story_ingested(metadata: dict):
     """Called immediately after story ingestion. Non-blocking."""
-    
+
     keywords = metadata.get("keywords", [])
     characters = metadata.get("characters", [])
     locations = metadata.get("locations", [])
-    
+
     with _lock:
         for keyword in keywords:
             _pending_updates[keyword]["count"] += 1
             _pending_updates[keyword]["doc_freq"] += 1
             _dirty_keywords.add(keyword)
-        
+
         # Similar for characters and locations...
-    
+
     # Fire-and-forget: schedule async persistence
     schedule_incremental_update()
 ```
@@ -169,21 +199,21 @@ def on_story_ingested(metadata: dict):
 ```python
 def incremental_update():
     """Persist pending updates. Runs every 15 minutes."""
-    
+
     global _dirty_keywords, _pending_updates
-    
+
     with _lock:
         if not _dirty_keywords:
             return  # Nothing to update
-        
+
         dirty = _dirty_keywords.copy()
         updates = dict(_pending_updates)
         _dirty_keywords.clear()
         _pending_updates.clear()
-    
+
     # Load current stats
     stats = load_enhanced_stats()
-    
+
     # Apply updates
     for keyword, delta in updates.items():
         if keyword not in stats["keywords"]:
@@ -197,15 +227,15 @@ def incremental_update():
                 "trend": "new",
                 "trend_delta": 0
             }
-        
+
         stats["keywords"][keyword]["count"] += delta["count"]
         stats["keywords"][keyword]["document_frequency"] += delta["doc_freq"]
         stats["keywords"][keyword]["last_seen"] = today()
-    
+
     # Update corpus stats
     stats["corpus_stats"]["total_stories"] += len(updates)
     stats["last_incremental_update"] = now()
-    
+
     # Save
     save_enhanced_stats(stats)
     print(f"Incremental update: {len(dirty)} keywords updated")
@@ -216,65 +246,65 @@ def incremental_update():
 ```python
 def nightly_full_recalculation():
     """Complete recalculation. Runs at 2 AM daily."""
-    
+
     print("Starting nightly full recalculation...")
     stats = load_enhanced_stats()
-    
+
     # 1. Recalculate ALL TF-IDF scores
     for keyword in stats["keywords"]:
         stats["keywords"][keyword]["tfidf_score"] = \
             calculate_tfidf(keyword, stats)
-    
+
     # 2. Sort and rank by TF-IDF (descending)
     sorted_keywords = sorted(
         stats["keywords"].items(),
         key=lambda x: x[1]["tfidf_score"],
         reverse=True
     )
-    
+
     total = len(sorted_keywords)
     for rank, (keyword, data) in enumerate(sorted_keywords, 1):
         old_rank = data.get("rank", rank)
-        
+
         data["rank"] = rank
         data["percentile"] = round((1 - rank/total) * 100, 1)
-        
+
         # Calculate trend (30-day window)
         delta = old_rank - rank
         data["trend_delta"] = delta
-        
+
         if delta > 10:
             data["trend"] = "up"
         elif delta < -10:
             data["trend"] = "down"
         else:
             data["trend"] = "stable"
-    
+
     # 3. Rebuild co-occurrence matrix
     stats["co_occurrence_matrix"] = build_co_occurrence_matrix()
-    
+
     # 4. Generate trending lists
     rising = sorted(
-        [(k, d["trend_delta"]) for k, d in stats["keywords"].items() 
+        [(k, d["trend_delta"]) for k, d in stats["keywords"].items()
          if d["trend_delta"] > 10],
         key=lambda x: x[1],
         reverse=True
     )[:20]
-    
+
     falling = sorted(
-        [(k, d["trend_delta"]) for k, d in stats["keywords"].items() 
+        [(k, d["trend_delta"]) for k, d in stats["keywords"].items()
          if d["trend_delta"] < -10],
         key=lambda x: x[1]
     )[:10]
-    
+
     stats["trending"] = {
         "rising": [{"keyword": k, "delta": d} for k, d in rising],
         "falling": [{"keyword": k, "delta": d} for k, d in falling]
     }
-    
+
     stats["generated_at"] = now()
     save_enhanced_stats(stats)
-    
+
     print(f"Nightly recalc complete: {total} keywords ranked")
 ```
 
@@ -287,9 +317,9 @@ Identifies keywords that frequently appear together:
 ```python
 def build_co_occurrence_matrix(top_n: int = 500) -> dict:
     """Build keyword co-occurrence from Qdrant payloads."""
-    
+
     from collections import Counter
-    
+
     # Get top N keywords by frequency
     stats = load_enhanced_stats()
     top_keywords = sorted(
@@ -298,10 +328,10 @@ def build_co_occurrence_matrix(top_n: int = 500) -> dict:
         reverse=True
     )[:top_n]
     top_set = {k for k, _ in top_keywords}
-    
+
     # Scan all stories from Qdrant
     co_occur = defaultdict(Counter)
-    
+
     for story in fetch_all_story_keywords():  # From Qdrant
         keywords = story.get("keywords", [])
         for kw in keywords:
@@ -309,12 +339,12 @@ def build_co_occurrence_matrix(top_n: int = 500) -> dict:
                 for other in keywords:
                     if other != kw and other in top_set:
                         co_occur[kw][other] += 1
-    
+
     # Convert to top-5 co-occurring for each
     matrix = {}
     for kw, counter in co_occur.items():
         matrix[kw] = [k for k, _ in counter.most_common(5)]
-    
+
     return {"keywords": matrix}
 ```
 
@@ -343,16 +373,16 @@ class KeywordAgentConfig:
     # Update intervals
     INCREMENTAL_INTERVAL_MINUTES = 15
     NIGHTLY_HOUR = 2  # 2 AM
-    
+
     # Ranking
     TFIDF_NORMALIZATION_FACTOR = 0.001
     TREND_THRESHOLD = 10  # Rank delta to trigger trend change
-    
+
     # Limits
     MAX_KEYWORDS_TO_RANK = 10000
     MAX_CO_OCCURRENCE_KEYWORDS = 500
     TOP_TRENDING_COUNT = 20
-    
+
     # Storage
     STATS_FILE = "data/stats/enhanced_stats.json"
     LEGACY_STATS_FILE = "data/stats/global_stats.json"
@@ -405,9 +435,9 @@ Generates both files:
 ```python
 def sync_legacy_stats():
     """Keep legacy format in sync for backward compat."""
-    
+
     enhanced = load_enhanced_stats()
-    
+
     legacy = {
         "total_stories": enhanced["corpus_stats"]["total_stories"],
         "keywords": {k: d["count"] for k, d in enhanced["keywords"].items()},
@@ -415,7 +445,7 @@ def sync_legacy_stats():
         "locations": {k: d["count"] for k, d in enhanced["locations"].items()},
         "authors": {k: d["count"] for k, d in enhanced["authors"].items()}
     }
-    
+
     with open("data/stats/global_stats.json", "w") as f:
         json.dump(legacy, f, ensure_ascii=False, indent=2)
 ```

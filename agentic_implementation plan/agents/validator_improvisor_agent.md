@@ -10,6 +10,36 @@ Quality gate ensuring only high-quality Telugu stories reach users. Evaluates ge
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Draft Story + Original Prompt] --> B{Quality Evaluation<br/>(LLM Judge)}
+
+    B --> C{Score >= 6.0?}
+
+    C -->|No| D[Generate Specific Feedback]
+    D --> E{Max Retries?}
+
+    E -->|No| F[📤 Request Regeneration<br/>(Back to RAG Agent)]
+    E -->|Yes| G[⚠️ Return Best Attempt w/ Warning]
+
+    C -->|Yes| H{Score >= 8.0?}
+
+    H -->|Yes| I[✅ Excellent Quality<br/>(Skip Polish)]
+    H -->|No| J[✨ Grammar Polish<br/>(Fix spelling/flow)]
+
+    I --> K[📤 Final Approved Story]
+    J --> K
+
+    style A fill:#e1f5fe
+    style K fill:#c8e6c9
+    style F fill:#ffecb3
+    style G fill:#ffcdd2
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -161,13 +191,13 @@ OUTPUT FORMAT (JSON only):
 ```python
 def evaluate_and_decide(evaluation: dict, attempt: int, max_attempts: int) -> dict:
     """Decide: pass, retry, or return best effort."""
-    
+
     overall_score = evaluation["overall_score"]
-    
+
     if overall_score >= PASS_THRESHOLD:  # 6.0
         # PASS - proceed to polish
         return {"action": "polish", "evaluation": evaluation}
-    
+
     elif attempt < max_attempts:
         # RETRY - generate feedback
         return {
@@ -177,7 +207,7 @@ def evaluate_and_decide(evaluation: dict, attempt: int, max_attempts: int) -> di
                 "specific_fixes": evaluation["specific_fixes"]
             }
         }
-    
+
     else:
         # MAX RETRIES - return best attempt
         return {
@@ -253,18 +283,18 @@ NEEDS_POLISH_THRESHOLD = 8.0  # Above this, skip polish
 ```python
 class BestAttemptTracker:
     """Track best story across regeneration attempts."""
-    
+
     def __init__(self):
         self.best_score = 0
         self.best_story = None
         self.best_attempt = 0
-    
+
     def update(self, story: str, score: float, attempt: int):
         if score > self.best_score:
             self.best_score = score
             self.best_story = story
             self.best_attempt = attempt
-    
+
     def get_best(self) -> dict:
         return {
             "story": self.best_story,
@@ -302,10 +332,10 @@ class ValidatorAgentConfig:
     PASS_THRESHOLD = 6.0
     NEEDS_POLISH_THRESHOLD = 8.0
     MAX_RETRIES = 3
-    
+
     EVALUATION_TIMEOUT_SECONDS = 45
     POLISH_TIMEOUT_SECONDS = 30
-    
+
     # Feature flag
     ENABLED = config.FEATURE_FLAGS.get("use_story_validation", False)
 ```

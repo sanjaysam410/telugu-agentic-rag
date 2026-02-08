@@ -10,6 +10,42 @@ Extract and generate complete metadata for stories (WF1) or prompts (WF2) using 
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Input Text + User Fields] --> B{Source Type?}
+
+    B -->|story| C[WF1: Full Extraction Mode]
+    B -->|prompt| D[WF2: Minimal Extraction Mode]
+
+    C --> E[Step 1: Script Extraction]
+    D --> E
+
+    E --> F["📊 Extract Stats<br/>word_count, char_count,<br/>year, month, telugu_ratio"]
+
+    F --> G{User provided<br/>all semantic fields?}
+
+    G -->|Yes| H[Merge User Fields]
+    G -->|No| I[Step 2: LLM Extraction]
+
+    I --> J["🧠 Extract Semantic<br/>title, keywords, genre,<br/>theme, characters, locations"]
+
+    J --> H
+
+    H --> K{Source Type?}
+
+    K -->|story| L[📤 Complete Metadata<br/>20+ fields → Store]
+    K -->|prompt| M[📤 Minimal Metadata<br/>keywords, genre, theme<br/>→ In-memory]
+
+    style A fill:#e1f5fe
+    style L fill:#c8e6c9
+    style M fill:#c8e6c9
+    style I fill:#fff3e0
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -100,35 +136,35 @@ Extract and generate complete metadata for stories (WF1) or prompts (WF2) using 
 ```python
 def script_extraction(text: str, user_fields: dict) -> dict:
     """Extract simple, countable fields without LLM."""
-    
+
     metadata = {}
-    
+
     # Statistics
     metadata["word_count"] = len(text.split())
     metadata["char_count"] = len(text)
     metadata["sentence_count"] = len(re.findall(r'[.!?।]', text))
     metadata["paragraph_count"] = len(text.split('\n\n'))
-    
+
     # Telugu ratio
     telugu_chars = len(re.findall(r'[\u0C00-\u0C7F]', text))
     metadata["telugu_ratio"] = telugu_chars / max(len(text), 1)
-    
+
     # Parse source reference
     if source_ref := user_fields.get("source_reference"):
         match = re.search(r'(\d{4})-(\d{2})', source_ref)
         if match:
             metadata["year"] = int(match.group(1))
             metadata["month"] = int(match.group(2))
-    
+
     # Generate story_id
     metadata["story_id"] = str(uuid.uuid4())
-    
+
     # Passthrough user fields
     metadata["author"] = user_fields.get("author", "Unknown")
     metadata["content_type"] = user_fields.get("content_type", "STORY")
     metadata["source_reference"] = user_fields.get("source_reference", "")
     metadata["language"] = "Telugu"
-    
+
     return metadata
 ```
 
@@ -243,13 +279,13 @@ class MetadataAgentConfig:
     MAX_KEYWORDS = 10
     MIN_KEYWORDS = 5
     LLM_TIMEOUT_SECONDS = 45
-    
+
     GENRE_CODES = [
         "FOLKLORE", "MYTHOLOGY", "MORAL_STORY", "CHILDREN_STORY",
         "COMEDY", "ADVENTURE", "MYSTERY", "SCIENCE", "ROMANCE",
         "PUZZLE", "POEM", "SONG", "SERIAL", "OTHER"
     ]
-    
+
     # Feature flag
     ENABLED = config.FEATURE_FLAGS.get("use_metadata_agent", False)
 ```
@@ -260,7 +296,7 @@ class MetadataAgentConfig:
 
 ### Scenario 1: Full Story Ingestion
 ```
-Input: 
+Input:
   source: "story"
   text: "ఒకప్పుడు ఒక అడవిలో..."
   user_fields: {author: "విశ్వం", source_reference: "1965-07"}

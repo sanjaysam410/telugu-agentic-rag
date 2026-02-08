@@ -10,6 +10,41 @@ Ensure only meaningful, valid Telugu content enters the knowledge base. Acts as 
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Story Input] --> B{Step 1: Script Validation}
+
+    B -->|Telugu chars = 0| C[❌ REJECT: NOT_TELUGU]
+    B -->|Length < 100| D[❌ REJECT: TOO_SHORT]
+    B -->|Telugu ratio < 50%| E[❌ REJECT: LOW_TELUGU_RATIO]
+    B -->|All checks pass| F{Step 2: LLM Validation}
+
+    F -->|Not coherent| G[❌ REJECT: NOT_COHERENT]
+    F -->|Not appropriate| H[❌ REJECT: INAPPROPRIATE]
+    F -->|All checks pass| I[✅ VALID]
+
+    I --> J[📤 Pass to Metadata Agent]
+
+    C --> K[🛑 End: Log rejection]
+    D --> K
+    E --> K
+    G --> K
+    H --> K
+
+    style A fill:#e1f5fe
+    style I fill:#c8e6c9
+    style C fill:#ffcdd2
+    style D fill:#ffcdd2
+    style E fill:#ffcdd2
+    style G fill:#ffcdd2
+    style H fill:#ffcdd2
+    style J fill:#c8e6c9
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -73,32 +108,32 @@ Ensure only meaningful, valid Telugu content enters the knowledge base. Acts as 
 ```python
 def script_validation(story_text: str) -> ValidationResult:
     """Fast, cheap validation checks. No API calls."""
-    
+
     # Check 1: Telugu Unicode presence
     telugu_chars = re.findall(r'[\u0C00-\u0C7F]', story_text)
     if len(telugu_chars) == 0:
         return fail("NOT_TELUGU", "No Telugu characters found")
-    
+
     # Check 2: Minimum length
     if len(story_text.strip()) < 100:
         return fail("TOO_SHORT", "Story must be at least 100 characters")
-    
+
     # Check 3: Not empty/whitespace
     if not story_text.strip():
         return fail("EMPTY", "Content is empty or whitespace only")
-    
+
     # Check 4: Telugu ratio >= 50%
     total_alpha = len(re.findall(r'\w', story_text))
     telugu_ratio = len(telugu_chars) / max(total_alpha, 1)
     if telugu_ratio < 0.5:
         return fail("LOW_TELUGU_RATIO", f"Telugu ratio {telugu_ratio:.0%} below 50%")
-    
+
     # Check 5: Valid Unicode (no malformed sequences)
     try:
         story_text.encode('utf-8').decode('utf-8')
     except UnicodeError:
         return fail("MALFORMED", "Contains invalid Unicode sequences")
-    
+
     return pass_to_llm(telugu_ratio=telugu_ratio)
 ```
 
@@ -189,7 +224,7 @@ class ValidationAgentConfig:
     TELUGU_RATIO_THRESHOLD = 0.50   # 50%
     LLM_TIMEOUT_SECONDS = 30
     LLM_MAX_RETRIES = 3
-    
+
     # Feature flag
     ENABLED = config.FEATURE_FLAGS.get("use_validation_agent", False)
 ```

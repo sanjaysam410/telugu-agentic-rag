@@ -10,6 +10,41 @@ Transform user prompts (in any language) into optimized Telugu prompts ready for
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 User Prompt + Facets] --> B{Language?}
+
+    B -->|Telugu| C[Optimize Only]
+    B -->|Other| D[Translate & Optimize]
+
+    C --> E[LLM Expansion]
+    D --> E
+
+    E --> F{Is Vague?}
+
+    F -->|Yes| G[Expand Narrative Elements]
+    F -->|No| H[Preserve Specifics]
+
+    G --> I[Construct Final Prompt]
+    H --> I
+
+    I --> J[Integrate Facets<br/>(Keywords, Genre, Tone)]
+
+    J --> K{Quality Check}
+
+    K -->|Telugu Ratio < 50%| L[❌ Retry Optimization]
+    K -->|Pass| M[📤 Optimized Telugu Prompt]
+
+    style A fill:#e1f5fe
+    style M fill:#c8e6c9
+    style L fill:#ffcdd2
+    style G fill:#fff9c4
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -65,7 +100,7 @@ You are a Telugu story prompt optimizer for the Chandamama children's magazine a
 
 USER INPUT: {user_prompt}
 INPUT LANGUAGE: {language_detected}
-SELECTED FACETS: 
+SELECTED FACETS:
 - Genre: {genre or "Not specified"}
 - Keywords: {keywords or "None"}
 - Characters: {characters or "None"}
@@ -83,12 +118,12 @@ YOUR TASKS:
    - Add narrative elements consistent with the request
    - Suggest plot direction without changing user's idea
    - Make it suitable for semantic search
-   
+
 3. **PRESERVE INTENT** (CRITICAL):
    - The user's core request MUST remain unchanged
    - Do NOT add unrelated themes
    - Do NOT change the fundamental story idea
-   
+
 4. **INTEGRATE FACETS**:
    - Naturally incorporate any provided facets
    - Don't force-fit if they conflict with prompt
@@ -113,15 +148,15 @@ Return ONLY the optimized Telugu prompt. No explanations.
 ```python
 def post_process(llm_output: str, original_prompt: str) -> dict:
     """Validate and structure the output."""
-    
+
     # Ensure Telugu content
     telugu_ratio = count_telugu_chars(llm_output) / len(llm_output)
     if telugu_ratio < 0.5:
         raise ValueError("Output not sufficiently Telugu")
-    
+
     # Extract keywords for facet integration tracking
     facets_integrated = extract_keywords(llm_output)
-    
+
     return {
         "original_prompt": original_prompt,
         "telugu_prompt": llm_output.strip(),
@@ -187,11 +222,11 @@ class PromptAgentConfig:
     MAX_RETRIES = 2
     MIN_TELUGU_RATIO = 0.5
     MAX_EXPANSION_RATIO = 3.0  # Don't expand more than 3x
-    
+
     SUPPORTED_LANGUAGES = [
         "te", "en", "hi", "ta", "kn", "ml"  # Telugu, English, Hindi, Tamil, Kannada, Malayalam
     ]
-    
+
     # Feature flag
     ENABLED = config.FEATURE_FLAGS.get("use_prompt_improvisation", False)
 ```

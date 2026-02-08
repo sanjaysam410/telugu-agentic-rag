@@ -25,7 +25,7 @@ uv run streamlit run app.py
 
 ## Architecture
 
-See `agentic_migration/README.md` for full architecture documentation.
+See `agentic_implementation plan/README.md` for full architecture documentation.
 
 ### Agents
 

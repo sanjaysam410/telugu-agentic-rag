@@ -10,6 +10,43 @@ Retrieve relevant context from the vector database and generate new Telugu stori
 
 ---
 
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Optimized Telugu Prompt] --> B[Metadata Agent<br/>(Extract Keywords/Genre)]
+
+    B --> C{Step 1: Retrieval}
+
+    C --> D[Generate Embeddings]
+    D --> E[Query Qdrant Cloud]
+    E --> F[Top-K Similar Stories]
+
+    F --> G{Step 2: Generation}
+
+    G --> H[Construct Prompt with Context<br/>(Style/Structure Reference)]
+
+    H --> I[LLM Generation<br/>(Streaming)]
+
+    I --> J[Draft Story]
+
+    J --> K[📤 Output to Validator]
+
+    subgraph Feedback Loop
+        L[Validator Feedback] --> M[Augment Prompt with Fixes]
+        M --> G
+    end
+
+    K -.-> L
+
+    style A fill:#e1f5fe
+    style K fill:#c8e6c9
+    style F fill:#fff9c4
+    style I fill:#ffcc80
+```
+
+---
+
 ## Why It Exists
 
 | Problem | Solution |
@@ -74,15 +111,15 @@ Retrieve relevant context from the vector database and generate new Telugu stori
 ```python
 def retrieve_context(prompt: str, keywords: list, top_k: int = 3) -> str:
     """Retrieve relevant stories from Qdrant."""
-    
+
     # Compose enriched search query
     keyword_str = " ".join(keywords) if keywords else ""
     search_query = f"{prompt} {keyword_str}".strip()
-    
+
     # Use existing retriever
     from src.retrieval.vector_search import StoryEmbeddingsRetriever
     retriever = StoryEmbeddingsRetriever(top_k=top_k)
-    
+
     # Get formatted context
     context = retriever.retrieve(search_query)
     return context
@@ -106,34 +143,34 @@ def retrieve_context(prompt: str, keywords: list, top_k: int = 3) -> str:
 ```python
 def generate_story(facets: dict, context: str, feedback: dict = None) -> str:
     """Generate story using existing logic + optional feedback."""
-    
+
     from src.story_gen import generate_story as gen_story
-    
+
     # Augment facets with regeneration feedback if present
     if feedback:
         facets["prompt_input"] = augment_with_feedback(
             facets.get("prompt_input", ""),
             feedback
         )
-    
+
     # Stream story generation
     full_story = ""
     for chunk in gen_story(facets, context_text=context):
         full_story += chunk
         yield chunk  # For streaming to UI
-    
+
     return full_story
 
 def augment_with_feedback(original_prompt: str, feedback: dict) -> str:
     """Add specific improvement instructions."""
-    
+
     issues = feedback.get("issues", [])
     fixes = feedback.get("specific_fixes", [])
-    
+
     augmented = f"{original_prompt}\n\nIMPORTANT CORRECTIONS:\n"
     for fix in fixes:
         augmented += f"- {fix}\n"
-    
+
     return augmented
 ```
 
@@ -239,10 +276,10 @@ class RAGAgentConfig:
     MAX_CONTEXT_TOKENS = 6000
     GENERATION_TEMPERATURE = 0.7
     MAX_GENERATION_TOKENS = 3500
-    
+
     # Regeneration settings
     MAX_REGENERATION_ATTEMPTS = 3
-    
+
     # Model selection
     DEFAULT_MODEL = "openai/gpt-oss-120b"
 ```
@@ -256,17 +293,17 @@ When the Validator Agent returns feedback:
 ```python
 def handle_regeneration(feedback: dict, attempt: int) -> dict:
     """Process regeneration request."""
-    
+
     if attempt >= MAX_REGENERATION_ATTEMPTS:
         raise MaxRetriesExceeded()
-    
+
     # Augment prompt with specific fixes
     enhanced_facets = {
         **original_facets,
-        "prompt_input": f"{original_prompt}\n\nFIX THESE ISSUES:\n" + 
+        "prompt_input": f"{original_prompt}\n\nFIX THESE ISSUES:\n" +
                         "\n".join(feedback["specific_fixes"])
     }
-    
+
     # Regenerate with feedback
     return generate_story(enhanced_facets, context)
 ```
@@ -288,7 +325,7 @@ Step 1: Vector Search
 Step 2: LLM Generation
   Model: openai/gpt-oss-120b
   Temperature: 0.7
-  
+
 Output:
   draft_story: "Title: బుద్ధిమంతుడు రైతు\n\nఒకప్పుడు..."
   context_used: ["a1", "b2", "c3"]

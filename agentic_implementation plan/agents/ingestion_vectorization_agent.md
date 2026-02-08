@@ -6,7 +6,36 @@
 
 ## Purpose
 
-Store validated stories and their embeddings in the vector database (Qdrant Cloud) and structured metadata in Supabase. This is a **script-only agent** with NO LLM calls.
+Store validated stories and their embeddings in the vector database (Qdrant Cloud) as the primary store, with a weekly backup to Supabase. This is a **script-only agent** with NO LLM calls.
+
+---
+
+## Agent Flow
+
+```mermaid
+flowchart TD
+    A[📥 Validated Metadata + Story Text] --> B[Step 1: Compose Embedding Text]
+
+    B --> C["🧮 Generate Embedding<br/>(GTE-Multilingual)"]
+
+    C --> D[Step 2: Store in Qdrant <br/>PRIMARY Store]
+
+    D --> E{Success?}
+
+    E -->|Yes| F[✅ Ingestion Complete]
+    E -->|No| G[❌ Retry / Log Error]
+
+    subgraph Weekly Backup Job
+        H[⏰ Scheduled Cron] --> I[Export Qdrant Payload]
+        I --> J[Save to Local Disk]
+        J --> K[Sync to Supabase <br/>BACKUP Store]
+    end
+
+    style A fill:#e1f5fe
+    style D fill:#c8e6c9
+    style K fill:#fff9c4
+    style G fill:#ffcdd2
+```
 
 ---
 
@@ -16,7 +45,7 @@ Store validated stories and their embeddings in the vector database (Qdrant Clou
 |---------|----------|
 | Manual embedding generation | Automated pipeline |
 | Inconsistent storage formats | Standardized schema |
-| Single storage backend | Hybrid Qdrant + Supabase |
+| Single storage backend | Hybrid Qdrant + Supabase backup |
 | Slow sequential processing | Batch operations |
 | No idempotency | Check-before-write logic |
 
@@ -85,7 +114,7 @@ Store validated stories and their embeddings in the vector database (Qdrant Clou
 ```python
 def compose_embedding_text(metadata: dict) -> str:
     """Compose rich text for embedding generation."""
-    
+
     header_parts = []
     if metadata.get('title'):
         header_parts.append(f"Title: {metadata['title']}")
@@ -96,7 +125,7 @@ def compose_embedding_text(metadata: dict) -> str:
         if isinstance(kws, list):
             kws = ", ".join(kws)
         header_parts.append(f"Keywords: {kws}")
-    
+
     header = "\n".join(header_parts)
     return f"{header}\n\n{metadata['text']}"
 ```
@@ -106,13 +135,13 @@ def compose_embedding_text(metadata: dict) -> str:
 ```python
 def generate_embedding(text: str) -> list[float]:
     """Generate 768-dim embedding using GTE model."""
-    
+
     from sentence_transformers import SentenceTransformer
     model = SentenceTransformer(
         "Alibaba-NLP/gte-multilingual-base",
         trust_remote_code=True
     )
-    
+
     embedding = model.encode(text, normalize_embeddings=True)
     return embedding.tolist()
 ```
@@ -122,14 +151,14 @@ def generate_embedding(text: str) -> list[float]:
 ```python
 def store_in_qdrant(story_id: str, embedding: list, metadata: dict):
     """Store embedding and full payload in Qdrant (primary store)."""
-    
+
     from qdrant_client import QdrantClient
     from qdrant_client.http import models
     import uuid
-    
+
     client = get_qdrant_client()
     point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, story_id))
-    
+
     # Full payload - Qdrant is the primary store
     payload = {
         "story_id": story_id,
@@ -141,7 +170,7 @@ def store_in_qdrant(story_id: str, embedding: list, metadata: dict):
         "keywords": metadata.get("keywords", []),
         "text": metadata.get("text", ""),  # Full text for RAG
     }
-    
+
     client.upsert(
         collection_name="chandamama_stories",
         points=[models.PointStruct(
@@ -150,7 +179,7 @@ def store_in_qdrant(story_id: str, embedding: list, metadata: dict):
             payload=payload
         )]
     )
-    
+
     return point_id
 ```
 
@@ -164,23 +193,23 @@ def store_in_qdrant(story_id: str, embedding: list, metadata: dict):
 
 async def weekly_backup_to_supabase():
     """Weekly backup job: Export Qdrant → Disk → Supabase."""
-    
+
     # 1. Export all stories from Qdrant
     stories = export_all_from_qdrant()
-    
+
     # 2. Save to local disk
     timestamp = datetime.now().strftime("%Y%m%d")
     backup_path = f"data/backups/stories_{timestamp}.json"
     with open(backup_path, "w") as f:
         json.dump(stories, f, ensure_ascii=False)
-    
+
     # 3. Sync to Supabase
     from supabase import create_client
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-    
+
     for story in stories:
         supabase.table("stories_backup").upsert(story).execute()
-    
+
     print(f"Backed up {len(stories)} stories to Supabase")
 ```
 
@@ -241,7 +270,7 @@ class IngestionAgentConfig:
     VECTOR_SIZE = 768
     RETRY_ATTEMPTS = 3
     RETRY_BACKOFF_SECONDS = [1, 3, 10]
-    
+
     # Feature flag
     USE_SUPABASE = config.FEATURE_FLAGS.get("use_supabase_storage", False)
 ```
@@ -302,7 +331,7 @@ Step 4: Store in Supabase
   → Row ID: 12345
   → All metadata except text (22 fields)
 
-Output: 
+Output:
   status: "success"
   qdrant_point_id: "550e8400..."
   supabase_row_id: 12345
