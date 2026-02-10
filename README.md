@@ -1,55 +1,47 @@
 # Telugu Agentic RAG System (AI Storyteller)
 
-An advanced **Multi-Agent AI System** designed to generate high-quality, culturally nuanced Telugu stories. This system evolves the pioneering **Chandamama Studio** from a *Linear RAG Pipeline* into a **Cognitive Architecture**.
+> **The first "Cognitive Architecture" for High-Quality Telugu Literature.** 🧠📚
+
+High-quality Telugu storytelling is notoriously difficult for AI due to linguistic nuance and stylistic drift. This project solves that by transforming the generation process from a **Single-Shot Draft** (Monolithic) into a **Multi-Stage Agentic Loop** (Plan → Draft → Critique → Polish).
 
 ---
 
-## 🚀 Why "Agentic" RAG? (vs. Old Monolithic Approach)
+## 🚀 The Core Philosophy: "Agentic" vs. "Monolithic"
 
-The transition from **Chandamama Studio (Monolithic)** to **Agentic RAG** represents a paradigm shift in AI storytelling.
+Why is this system better than the old **Chandamama Studio**?
 
-## 🚀 Why "Agentic" RAG? (vs. Chandamama Studio)
-
-The **Chandamama Studio** was a pioneering *Linear RAG* application. This new **Agentic System** evolves it into a *Cognitive Architecture*.
-
-| Feature | 🏛️ Chandamama Studio (Legacy) | 🤖 Agentic RAG (New System) |
+| Feature | 🏛️ Monolithic Approach (Old) | 🤖 Agentic Approach (New) |
 | :--- | :--- | :--- |
-| **Workflow** | **Linear**: Retriever -> LLM -> Output. | **Cyclic**: Plan -> Draft -> **Critique (Loop)** -> Polish. |
-| **Quality Control** | **Manual**: If the output is bland, you must manually prompt again. | **Autonomous Validator**: A specialized "Editor" Agent audits the story against 8 strict rules and **fixes it automatically** before you see it. |
-| **Planning** | **Direct**: User Prompt immediately triggers generation. | **Cognitive**: A "Prompt Optimizer" Agent first expands your request into a detailed narrative blueprint. |
-| **Language** | **Translation-Heavy**: Often sounded like translated English. | **"Think in Telugu"**: Enforces native thinking and idiom usage via the "8 Commandments". |
-| **Resilience** | **Script-Based**: Single error stops the process. | **Graph-Based**: Agents can retry specific steps (e.g., re-generate just the ending) without restarting. |
+| **Workflow** | **Linear**: Input -> LLM -> Draft. If the plot wanders, you're stuck with it. | **Cyclic**: Plan -> Draft -> **Critique Loop** -> Polish. The system *self-corrects*. |
+| **Cognition** | **Reactive**: The LLM reacts to the prompt immediately. | **Deliberate**: An "Optimizer Agent" first plans the narrative arc before writing a single word. |
+| **Quality Control** | **Manual**: You, the user, must spot errors and vague writing. | **Autonomous Validator**: A specialized "Editor Agent" critiques the draft for *Show-Don't-Tell* and *Pacing* issues, rejecting bad drafts automatically. |
+| **Language Model** | **Generalist**: Often produces "Translated English" (Bookish Telugu). | **Specialized**: Enforces a "Think in Telugu" protocol to prioritize native idioms and rhythm. |
 
 ---
 
-## 🛡️ The "8 Commandments" of Quality
+## 🌟 How It Works: The "Quality Loop"
 
-This system doesn't just "write stories"; it adheres to a strict literary code enforced by the **Validator Agent**:
+The secret to generating "quite good" stories isn't just a better prompt—it's the **Architecture**.
 
-1.  **Show, Don't Tell**: Characters are introduced via **ACTION**, not trait dumping (e.g., *No "Raju is greedy". Show Raju snatching a coin.*).
-2.  **Gradual Arcs**: Character transformation must follow a 4-stage path (Resistance -> Doubt -> Change -> Growth).
-3.  **No Preaching**: "Double Morals" are banned. The story *is* the lesson; characters do not lecture.
-4.  **Logical Consequences**: No "magical" fixes. Actions have real weight.
-5.  **Object Permanence**: Items introduced must remain consistent in physics and utility.
-6.  **Varied Sentence Structure**: No repetitive "Name... Name..." sentence starts.
-7.  **Functional Description**: Atmosphere must serve the plot, not just decorate.
-8.  **Earned Resolution**: Endings must be a result of character choice, not luck.
+### 1. The Planner (Prompt Optimizer)
+Before writing begins, the **Optimizer Agent** analyzes your request. It doesn't just pass keywords; it expands them into a tailored blueprint, ensuring the model understands the *intent*, tone, and required narrative structure.
 
----
+### 2. The Drafter (RAG Generator)
+The **Generator Agent** writes the story, but it doesn't write in a vacuum. It uses **Retrieval Augmented Generation (RAG)** to pull specific *stylistic examples* from our curated archive. If you ask for a "Tenali Rama" style story, it retrieves actual excerpts to ground its tone in authenticity.
 
-## 🧩 The Agent Team
+### 3. The Editor (Validator Agent) – *Crucial Step*
+This is where the magic happens. The draft is NOT shown to you immediately. It is passed to a strict **Validator Agent** (acting as a Senior Editor). This agent critiques the story against rigorous literary standards:
 
-1.  **Ingestion Agent**: Reads raw Telugu stories, cleans them, extracts metadata, and stores them in **Qdrant** (Vector DB).
-2.  **Prompt Optimizer Agent**: "Thinks" about your request and expands it into a detailed blueprint before writing starts.
-3.  **RAG Generator Agent (The Storyteller)**: Retrieves similar stories for style reference and drafts the narrative using the "Think in Telugu" safeguards.
-4.  **Validator Agent (The Editor)**: The harshest critic. It reads the draft, checks the 8 Commandments, and auto-corrects minor issues or rejects major failures.
+*   **Show, Don't Tell**: Flagging "lazy" descriptions (e.g., "Raju was greedy") and demanding action-based intros.
+*   **Pacing & Arc**: Ensuring character transformation happens gradually, not instantly.
+*   **Logical Consistency**: Checking that actions have realistic consequences.
+*   **No Preaching**: Ensuring the story *is* the lesson, rather than characters lecturing the moral.
+
+If the draft fails these checks, the Validator sends it back to the Drafter with specific fix instructions. **This loop repeats until the story meets quality standards.**
 
 ---
 
-
----
-
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
@@ -64,7 +56,7 @@ graph TD
         PO -->|Retrieves Style| RAG[RAG Retriever]
         RAG -.->|Queries| Q
         RAG -->|Drafts Story| GEN[Generator Agent]
-        GEN -->|Critiques against 8-Points| VAL[Validator Agent]
+        GEN -->|CRITIQUES (Quality Standards)| VAL[Validator Agent]
         VAL -- REJECT / FIX --> GEN
         VAL -- ACCEPT --> Final(Final Story)
     end
@@ -75,12 +67,10 @@ graph TD
 ## 🛠️ Installation & Setup
 
 ### 1. Requirements
-
 - Python 3.10+
 - **Google Gemini API Key** (or OpenAI/Groq)
 
 ### 2. Quick Start (Streamlit Cloud Ready)
-
 This project uses a simple `requirements.txt` structure for easy deployment.
 
 ```bash
@@ -99,20 +89,31 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### 3. Folder Structure
+---
 
-- `src/agents/`: The brains of the operation (Ingestion, Generation, Validation).
-- `src/utils/`: Helper functions and the core `generation_utils.py` (Prompt Templates).
-- `data/`: Local storage for vector chunks (excluded from git).
-- `app.py`: The Main Interface.
 
 ---
 
-## 🤝 Contributing
+## 🤝 How to Contribute
 
-We welcome contributions regarding **Prompt Engineering** and **Dataset Expansion**.
-See `CONTRIBUTING.md` for details.
+We welcome improvements to the "Brain" of the system!
+
+### 1. Improving the Storyteller (Prompt Engineering)
+- **File**: `src/utils/generation_utils.py`
+- **Goal**: Make stories more culturally authentic.
+- **Action**: Tweak the `generate_story` function to adjust the "Planner" blueprint or "Drafter" style instructions.
+
+### 2. Sharpening the Editor (Validator Logic)
+- **File**: `src/agents/wf2_generation/validator_agent.py`
+- **Goal**: Catch more errors (e.g., Passive Voice, English Idioms).
+- **Action**: Add new checks to the `validate` method. If you find a common AI mistake, write a rule to catch it!
+
+### 3. Adding New Agents
+- Create a new agent in `src/agents/`.
+- Inherit from `BaseAgent`.
+- Register it in the workflow.
+
+See `CONTRIBUTING.md` for full coding guidelines.
 
 ---
-
 **License**: AGPL-3.0
