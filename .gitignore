@@ -8,6 +8,14 @@ dist/
 build/
 *.egg
 
+# Editor directories and files
+.idea
+.vscode
+*.swp
+*.swo
+
+chandamama-studio/
+
 # Virtual environments
 .venv/
 venv/
@@ -46,3 +54,7 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Vector DB (Local)
+qdrant_db/
+qdrant_data/
