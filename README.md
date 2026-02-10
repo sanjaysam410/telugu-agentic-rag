@@ -56,11 +56,25 @@ graph TD
         PO -->|Retrieves Style| RAG[RAG Retriever]
         RAG -.->|Queries| Q
         RAG -->|Drafts Story| GEN[Generator Agent]
-        GEN -->|CRITIQUES (Quality Standards)| VAL[Validator Agent]
+        GEN -->|Critiques - Quality Standards| VAL[Validator Agent]
         VAL -- REJECT / FIX --> GEN
         VAL -- ACCEPT --> Final(Final Story)
     end
 ```
+
+### 🧩 The Agent Roster
+
+Every agent has a specific job in this cognitive assembly line.
+
+| Workflow | Agent | Responsibility |
+| :--- | :--- | :--- |
+| **Ingestion** | **Ingestion Validator** | Checks if raw text is valid Telugu and long enough. |
+| **Ingestion** | **Metadata Agent** | Extracts Genre, Themes, and Keywords for better search. |
+| **Ingestion** | **Ingestion Agent** | Backs up to Mongo, embeds text (GTE), and pushes to Qdrant. |
+| **Generation** | **Prompt Optimizer** | "The Planner." Expands simple user requests into detailed blueprints. |
+| **Generation** | **RAG Retriever** | "The Librarian." Fetches similar stories to use as style references. |
+| **Generation** | **Generator Agent** | "The Writer." Drafts the story following the blueprint and style guide. |
+| **Generation** | **Validator Agent** | "The Editor." Critiques the draft against 8 literary standards and demands fixes. |
 
 ---
 
