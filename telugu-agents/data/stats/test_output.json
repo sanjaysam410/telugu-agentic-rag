@@ -1,0 +1,118 @@
+{
+  "corpus_stats": {
+    "total_stories": 2,
+    "total_words": 60,
+    "total_keywords": 6,
+    "total_characters": 4,
+    "total_locations": 4
+  },
+  "keywords": {
+    "రాజు": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 1,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    },
+    "వినయం": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 2,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    },
+    "గర్వం": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 3,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    }
+  },
+  "characters": {
+    "రాజు": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 1,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    },
+    "మంత్రి": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 2,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    }
+  },
+  "locations": {
+    "రాజ్యం": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 1,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    },
+    "అడవి": {
+      "count": 2,
+      "document_frequency": 2,
+      "tfidf_score": 0,
+      "rank": 2,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    }
+  },
+  "authors": {
+    "విశ్వం": {
+      "count": 2,
+      "document_frequency": 0,
+      "tfidf_score": 0,
+      "rank": 1,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    }
+  },
+  "genres": {
+    "MORAL_STORY": {
+      "count": 2,
+      "document_frequency": 0,
+      "tfidf_score": 0,
+      "rank": 1,
+      "percentile": 0,
+      "last_seen": "2026-02-10T13:20:58.048177",
+      "trend": "new",
+      "trend_delta": 0
+    }
+  },
+  "co_occurrence_matrix": {
+    "keywords": {}
+  },
+  "trending": {
+    "rising": [],
+    "falling": []
+  },
+  "last_incremental_update": "2026-02-10T13:20:58.048177",
+  "generated_at": "2026-02-10T13:18:37.162069"
+}
