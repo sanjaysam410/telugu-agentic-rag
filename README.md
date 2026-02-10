@@ -1,6 +1,6 @@
 # Telugu Agentic RAG System (AI Storyteller)
 
-An advanced **Multi-Agent AI System** designed to generate high-quality, culturally nuanced Telugu stories. Unlike traditional "Monolithic" LLM scripts, this system employs a team of specialized agents to plan, draft, validate, and polish stories, ensuring they meet rigorous literary standards.
+An advanced **Multi-Agent AI System** designed to generate high-quality, culturally nuanced Telugu stories. This system evolves the pioneering **Chandamama Studio** from a *Linear RAG Pipeline* into a **Cognitive Architecture**.
 
 ---
 
@@ -8,13 +8,17 @@ An advanced **Multi-Agent AI System** designed to generate high-quality, cultura
 
 The transition from **Chandamama Studio (Monolithic)** to **Agentic RAG** represents a paradigm shift in AI storytelling.
 
-| Feature | 🏛️ Old Monolithic Approach | 🤖 New Agentic Approach |
+## 🚀 Why "Agentic" RAG? (vs. Chandamama Studio)
+
+The **Chandamama Studio** was a pioneering *Linear RAG* application. This new **Agentic System** evolves it into a *Cognitive Architecture*.
+
+| Feature | 🏛️ Chandamama Studio (Legacy) | 🤖 Agentic RAG (New System) |
 | :--- | :--- | :--- |
-| **Process** | **Linear**: Input -> LLM -> Output. If it fails, it fails. | **Iterative**: Input -> Plan -> Draft -> **Critique** -> **Fix** -> Output. |
-| **Quality Control** | **None**: You get what the LLM gives you. "Hallucinations" are common. | **Validator Agent**: A dedicated "Editor" agent reviews the story against 8 stringent rules and *rejects* or *fixes* it before you see it. |
-| **Context** | **Static**: Uses a fixed prompt template for all stories. | **Dynamic RAG**: Searches a Vector Database for specific stylistic examples relevant to your request. |
-| **Creativity** | **Robotic**: Often translates English thoughts to Telugu, sounding "bookish". | **"Think in Telugu"**: Enforces native thinking and idiom usage via the "8 Commandments". |
-| **Architecture** | **Single Point of Failure**: One big script. | **Resilient**: If one agent fails (e.g., API error), others can retry or adapt. |
+| **Workflow** | **Linear**: Retriever -> LLM -> Output. | **Cyclic**: Plan -> Draft -> **Critique (Loop)** -> Polish. |
+| **Quality Control** | **Manual**: If the output is bland, you must manually prompt again. | **Autonomous Validator**: A specialized "Editor" Agent audits the story against 8 strict rules and **fixes it automatically** before you see it. |
+| **Planning** | **Direct**: User Prompt immediately triggers generation. | **Cognitive**: A "Prompt Optimizer" Agent first expands your request into a detailed narrative blueprint. |
+| **Language** | **Translation-Heavy**: Often sounded like translated English. | **"Think in Telugu"**: Enforces native thinking and idiom usage via the "8 Commandments". |
+| **Resilience** | **Script-Based**: Single error stops the process. | **Graph-Based**: Agents can retry specific steps (e.g., re-generate just the ending) without restarting. |
 
 ---
 
